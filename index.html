@@ -8,6 +8,7 @@
     html, body {
       margin: 0;
       height: 100%;
+      width: 100%;
       background: #fff0f6;
       display: flex;
       justify-content: center;
@@ -43,9 +44,13 @@
       cursor: pointer;
     }
 
+    .resize-slider {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+
     .face {
-      width: 80vmin;
-      height: 80vmin;
       background: #ffe3ec;
       border-radius: 50%;
       display: flex;
@@ -53,6 +58,7 @@
       justify-content: center;
       align-items: center;
       position: relative;
+      transition: transform 0.2s ease;
     }
 
     .eyes {
@@ -64,14 +70,23 @@
     .eye {
       width: 12vmin;
       height: 12vmin;
-      background: #000;
+      background: white;
       border-radius: 50%;
-      transition: all 0.2s ease;
+      border: 2px solid #000;
+      position: relative;
+      overflow: hidden;
     }
 
-    .eye.closed {
-      height: 1vmin;
-      border-radius: 1vmin;
+    .pupil {
+      width: 4vmin;
+      height: 4vmin;
+      background: #000;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: transform 0.4s ease;
     }
 
     .mouth {
@@ -79,11 +94,23 @@
       height: 7vmin;
       background: #d6336c;
       border-radius: 0 0 10vmin 10vmin;
-      transition: height 0.1s ease;
+      transition: all 0.2s ease;
     }
 
     .mouth.open {
       height: 18vmin;
+    }
+
+    .mouth.grin {
+      border-radius: 10vmin;
+      height: 5vmin;
+    }
+
+    .mouth.think {
+      width: 12vmin;
+      height: 4vmin;
+      border-radius: 50%;
+      background: #999;
     }
 
     #micSelect {
@@ -95,11 +122,12 @@
   </style>
 </head>
 <body>
+  <input type="range" min="50" max="100" value="80" class="resize-slider" id="resizeSlider">
   <div class="face" id="face">
     <button class="pop-out" onclick="popOut()">↗</button>
     <div class="eyes">
-      <div class="eye" id="eyeL"></div>
-      <div class="eye" id="eyeR"></div>
+      <div class="eye" id="eyeL"><div class="pupil" id="pupilL"></div></div>
+      <div class="eye" id="eyeR"><div class="pupil" id="pupilR"></div></div>
     </div>
     <div class="mouth" id="mouth"></div>
   </div>
@@ -116,10 +144,11 @@
 
   <script>
     const face = document.getElementById('face');
-    const leftEye = document.getElementById('eyeL');
-    const rightEye = document.getElementById('eyeR');
+    const leftPupil = document.getElementById('pupilL');
+    const rightPupil = document.getElementById('pupilR');
     const mouth = document.getElementById('mouth');
     const micSelect = document.getElementById('micSelect');
+    const resizeSlider = document.getElementById('resizeSlider');
 
     function setBg(color) {
       document.body.style.background = color;
@@ -132,24 +161,35 @@
     }
 
     function blink() {
-      leftEye.classList.add('closed');
-      rightEye.classList.add('closed');
-      setTimeout(() => {
-        leftEye.classList.remove('closed');
-        rightEye.classList.remove('closed');
-      }, 200);
+      document.querySelectorAll('.eye').forEach(eye => {
+        eye.classList.add('closed');
+        setTimeout(() => eye.classList.remove('closed'), 200);
+      });
     }
 
     function lookAround() {
-      const offsetX = (Math.random() - 0.5) * 10;
-      const offsetY = (Math.random() - 0.5) * 10;
-      leftEye.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-      rightEye.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+      const directions = [
+        { x: -50, y: 0 }, // left
+        { x: 50, y: 0 },  // right
+        { x: 0, y: -50 }, // up
+        { x: 0, y: 50 }   // down
+      ];
+      const pick = directions[Math.floor(Math.random() * directions.length)];
+      leftPupil.style.transform = `translate(${pick.x}%, ${pick.y}%)`;
+      rightPupil.style.transform = `translate(${pick.x}%, ${pick.y}%)`;
+    }
+
+    function randomMouth() {
+      mouth.className = 'mouth';
+      const r = Math.random();
+      if (r > 0.8) mouth.classList.add('grin');
+      else if (r > 0.6) mouth.classList.add('think');
     }
 
     setInterval(() => {
       if (Math.random() > 0.7) blink();
-      if (Math.random() > 0.6) lookAround();
+      if (Math.random() > 0.5) lookAround();
+      if (Math.random() > 0.6) randomMouth();
     }, 5000);
 
     async function getMicDevices() {
@@ -162,11 +202,14 @@
         option.textContent = mic.label || `Microphone ${i + 1}`;
         micSelect.appendChild(option);
       });
+      const savedId = localStorage.getItem('preferredMic');
+      if (savedId) micSelect.value = savedId;
     }
 
     async function startMic(deviceId) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId } });
+        localStorage.setItem('preferredMic', deviceId);
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: deviceId ? { exact: deviceId } : undefined } });
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const source = audioCtx.createMediaStreamSource(stream);
         const analyser = audioCtx.createAnalyser();
@@ -179,9 +222,7 @@
           analyser.getByteFrequencyData(dataArray);
           const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
           if (volume > 30) {
-            mouth.classList.add('open');
-          } else {
-            mouth.classList.remove('open');
+            mouth.className = 'mouth open';
           }
           requestAnimationFrame(update);
         }
@@ -195,6 +236,12 @@
 
     micSelect.addEventListener('change', () => {
       startMic(micSelect.value);
+    });
+
+    resizeSlider.addEventListener('input', () => {
+      const size = resizeSlider.value;
+      face.style.width = `${size}vmin`;
+      face.style.height = `${size}vmin`;
     });
 
     getMicDevices().then(() => {
