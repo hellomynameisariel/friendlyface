@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kawaii Face</title>
+  <title>FriendlyFace</title>
   <style>
     html, body {
       margin: 0;
@@ -45,10 +45,18 @@
       left: 50%;
       transform: translate(-50%, -50%) scale(1);
       transition: transform 0.2s ease;
+      width: 100vmin;
+      height: 100vmin;
     }
-    .face-part {
+    .eye.left {
       position: absolute;
-      transform-origin: center center;
+      top: 30%;
+      left: 20%;
+    }
+    .eye.right {
+      position: absolute;
+      top: 30%;
+      right: 20%;
     }
     .eye {
       width: 20vmin;
@@ -57,14 +65,6 @@
       border: 2px solid #000;
       border-radius: 50%;
       overflow: hidden;
-    }
-    .eye.left {
-      top: 30%;
-      left: 30%;
-    }
-    .eye.right {
-      top: 30%;
-      right: 30%;
     }
     .pupil {
       width: 6vmin;
@@ -77,6 +77,16 @@
       transform: translate(-50%, -50%);
       transition: transform 0.6s ease;
     }
+    .eyebrow.left {
+      position: absolute;
+      top: 18%;
+      left: 20%;
+    }
+    .eyebrow.right {
+      position: absolute;
+      top: 18%;
+      right: 20%;
+    }
     .eyebrow {
       width: 10vmin;
       height: 1.5vmin;
@@ -84,15 +94,8 @@
       border-radius: 1vmin;
       transform-origin: center;
     }
-    .eyebrow.left {
-      top: 18%;
-      left: 25%;
-    }
-    .eyebrow.right {
-      top: 18%;
-      right: 25%;
-    }
     .mouth {
+      position: absolute;
       width: 30vmin;
       height: 12vmin;
       background: #d6336c;
@@ -113,6 +116,7 @@
       background: #999;
     }
     .accessory {
+      position: absolute;
       top: 5%;
       left: 50%;
       transform: translateX(-50%);
@@ -182,13 +186,13 @@
   </div>
   <button class="pop-out" onclick="popOut()">↗</button>
   <div class="face-container" id="face">
-    <div class="face-part eyebrow left" id="eyebrowL"></div>
-    <div class="face-part eyebrow right" id="eyebrowR"></div>
-    <div class="face-part eye left"><div class="pupil" id="pupilL"></div></div>
-    <div class="face-part eye right"><div class="pupil" id="pupilR"></div></div>
-    <div class="face-part mouth" id="mouth"></div>
-    <div class="face-part accessory" id="accessory"></div>
-    <div class="face-part beard" id="beard" style="display:none"></div>
+    <div class="eyebrow left" id="eyebrowL"></div>
+    <div class="eyebrow right" id="eyebrowR"></div>
+    <div class="eye left"><div class="pupil" id="pupilL"></div></div>
+    <div class="eye right"><div class="pupil" id="pupilR"></div></div>
+    <div class="mouth" id="mouth"></div>
+    <div class="accessory" id="accessory"></div>
+    <div class="beard" id="beard" style="display:none"></div>
   </div>
   <script>
     const leftPupil = document.getElementById('pupilL');
@@ -208,7 +212,7 @@
     }
 
     function setAccessory(value) {
-      accessory.className = 'face-part accessory';
+      accessory.className = 'accessory';
       beard.style.display = 'none';
       if (value === 'none') return;
       accessory.classList.add(value);
@@ -224,7 +228,8 @@
     function lookAround() {
       const directions = [
         { x: -50, y: 0 }, { x: 50, y: 0 }, { x: 0, y: -50 }, { x: 0, y: 50 },
-        { x: -25, y: -25 }, { x: 25, y: -25 }, { x: -25, y: 25 }, { x: 25, y: 25 }
+        { x: -25, y: -25 }, { x: 25, y: -25 }, { x: -25, y: 25 }, { x: 25, y: 25 },
+        { x: -15, y: -15 }, { x: 15, y: 15 }
       ];
       const pick = directions[Math.floor(Math.random() * directions.length)];
       leftPupil.style.transform = `translate(${pick.x}%, ${pick.y}%)`;
@@ -232,7 +237,7 @@
     }
 
     function randomMouth() {
-      mouth.className = 'face-part mouth';
+      mouth.className = 'mouth';
       const r = Math.random();
       if (r > 0.8) mouth.classList.add('grin');
       else if (r > 0.6) mouth.classList.add('think');
