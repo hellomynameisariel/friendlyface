@@ -5,18 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Kawaii Face</title>
   <style>
-    body {
+    html, body {
+      margin: 0;
+      height: 100%;
       background: #fff0f6;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      font-family: sans-serif;
+    }
+
+    .pop-out {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.6);
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+    .color-picker {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      display: flex;
+      gap: 5px;
+    }
+
+    .color-picker button {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
     }
 
     .face {
-      width: 300px;
-      height: 300px;
+      width: 80vmin;
+      height: 80vmin;
       background: #ffe3ec;
       border-radius: 50%;
       display: flex;
@@ -24,43 +53,50 @@
       justify-content: center;
       align-items: center;
       position: relative;
-      box-shadow: 0 0 30px rgba(0,0,0,0.1);
     }
 
     .eyes {
       display: flex;
-      gap: 60px;
-      margin-bottom: 20px;
+      gap: 20%;
+      margin-bottom: 10%;
     }
 
     .eye {
-      width: 40px;
-      height: 40px;
+      width: 12vmin;
+      height: 12vmin;
       background: #000;
       border-radius: 50%;
+      transition: all 0.2s ease;
     }
 
     .eye.closed {
-      height: 6px;
-      border-radius: 3px;
-      background: #000;
+      height: 1vmin;
+      border-radius: 1vmin;
     }
 
     .mouth {
-      width: 60px;
-      height: 30px;
+      width: 20vmin;
+      height: 7vmin;
       background: #d6336c;
-      border-radius: 0 0 30px 30px;
+      border-radius: 0 0 10vmin 10vmin;
       transition: height 0.1s ease;
     }
 
     .mouth.open {
-      height: 70px;
+      height: 18vmin;
+    }
+
+    #micSelect {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 1rem;
     }
   </style>
 </head>
 <body>
-  <div class="face">
+  <div class="face" id="face">
+    <button class="pop-out" onclick="popOut()">↗</button>
     <div class="eyes">
       <div class="eye" id="eyeL"></div>
       <div class="eye" id="eyeR"></div>
@@ -68,10 +104,32 @@
     <div class="mouth" id="mouth"></div>
   </div>
 
+  <div class="color-picker">
+    <button style="background:#fff0f6" onclick="setBg('#fff0f6')"></button>
+    <button style="background:#d0f4de" onclick="setBg('#d0f4de')"></button>
+    <button style="background:#cce5ff" onclick="setBg('#cce5ff')"></button>
+    <button style="background:#f9f9c5" onclick="setBg('#f9f9c5')"></button>
+    <button style="background:#ffe3ec" onclick="setBg('#ffe3ec')"></button>
+  </div>
+
+  <select id="micSelect"></select>
+
   <script>
-    // Blinking
+    const face = document.getElementById('face');
     const leftEye = document.getElementById('eyeL');
     const rightEye = document.getElementById('eyeR');
+    const mouth = document.getElementById('mouth');
+    const micSelect = document.getElementById('micSelect');
+
+    function setBg(color) {
+      document.body.style.background = color;
+      face.style.background = color;
+    }
+
+    function popOut() {
+      const newWin = window.open('', '', 'width=400,height=400');
+      newWin.document.write(document.documentElement.outerHTML);
+    }
 
     function blink() {
       leftEye.classList.add('closed');
@@ -79,38 +137,52 @@
       setTimeout(() => {
         leftEye.classList.remove('closed');
         rightEye.classList.remove('closed');
-      }, 150);
+      }, 200);
+    }
+
+    function lookAround() {
+      const offsetX = (Math.random() - 0.5) * 10;
+      const offsetY = (Math.random() - 0.5) * 10;
+      leftEye.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+      rightEye.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
     }
 
     setInterval(() => {
-      if (Math.random() > 0.5) blink();
-    }, 3000);
+      if (Math.random() > 0.7) blink();
+      if (Math.random() > 0.6) lookAround();
+    }, 5000);
 
-    // Mic Input
-    const mouth = document.getElementById('mouth');
+    async function getMicDevices() {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const mics = devices.filter(d => d.kind === 'audioinput');
+      micSelect.innerHTML = '';
+      mics.forEach((mic, i) => {
+        const option = document.createElement('option');
+        option.value = mic.deviceId;
+        option.textContent = mic.label || `Microphone ${i + 1}`;
+        micSelect.appendChild(option);
+      });
+    }
 
-    async function startMic() {
+    async function startMic(deviceId) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId } });
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const source = audioCtx.createMediaStreamSource(stream);
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 512;
 
         source.connect(analyser);
-
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
         function update() {
           analyser.getByteFrequencyData(dataArray);
           const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-
           if (volume > 30) {
             mouth.classList.add('open');
           } else {
             mouth.classList.remove('open');
           }
-
           requestAnimationFrame(update);
         }
 
@@ -121,7 +193,15 @@
       }
     }
 
-    startMic();
+    micSelect.addEventListener('change', () => {
+      startMic(micSelect.value);
+    });
+
+    getMicDevices().then(() => {
+      if (micSelect.options.length > 0) {
+        startMic(micSelect.value);
+      }
+    });
   </script>
 </body>
 </html>
