@@ -10,10 +10,22 @@
       height: 100%;
       width: 100%;
       background: #fff0f6;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       font-family: sans-serif;
+      overflow: hidden;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1000;
+    }
+    .color-picker,
+    .resize-slider,
+    .accessory-select {
+      margin-bottom: 5px;
     }
     .pop-out {
       position: absolute;
@@ -25,33 +37,11 @@
       border: none;
       padding: 5px 10px;
       border-radius: 5px;
+      z-index: 1000;
     }
-    .color-picker {
+    .face-part {
       position: absolute;
-      bottom: 10px;
-      left: 10px;
-      display: flex;
-      gap: 5px;
-    }
-    .color-picker button {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-    }
-    .resize-slider {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-    }
-    .accessory-select {
-      position: absolute;
-      top: 50px;
-      left: 10px;
-    }
-    .eye, .mouth, .accessory {
-      position: absolute;
+      transform-origin: center center;
     }
     .eye {
       width: 20vmin;
@@ -81,17 +71,17 @@
       transition: transform 0.3s ease;
     }
     .eyebrow {
-      position: absolute;
       width: 10vmin;
       height: 1.5vmin;
       background: #000;
       border-radius: 1vmin;
-      top: 20%;
     }
     .eyebrow.left {
+      top: 20%;
       left: 25%;
     }
     .eyebrow.right {
+      top: 20%;
       right: 25%;
     }
     .mouth {
@@ -129,24 +119,14 @@
       border-radius: 50% 50% 0 0;
       clip-path: polygon(0 0, 50% 100%, 100% 0);
     }
-    .cat-ears {
+    .cat {
       width: 0;
       height: 0;
       border-left: 6vmin solid transparent;
       border-right: 6vmin solid transparent;
       border-bottom: 10vmin solid gray;
-      position: absolute;
-      top: -5vmin;
     }
-    .cat-ears::before {
-      content: '';
-      position: absolute;
-      left: -12vmin;
-      border-left: 6vmin solid transparent;
-      border-right: 6vmin solid transparent;
-      border-bottom: 10vmin solid gray;
-    }
-    .santa-hat {
+    .hat {
       width: 20vmin;
       height: 10vmin;
       background: red;
@@ -160,41 +140,37 @@
       top: 75%;
     }
     #micSelect {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
       font-size: 1rem;
     }
   </style>
 </head>
 <body>
-  <input type="range" min="100" max="200" value="100" class="resize-slider" id="resizeSlider">
-  <select id="accessorySelect" class="accessory-select">
-    <option value="none">No Accessory</option>
-    <option value="bow">Bow</option>
-    <option value="cat">Cat Ears</option>
-    <option value="hat">Santa Hat</option>
-    <option value="beard">Beard</option>
-  </select>
-
-  <div class="eyebrow left"></div>
-  <div class="eyebrow right"></div>
-  <div class="eye left"><div class="pupil" id="pupilL"></div></div>
-  <div class="eye right"><div class="pupil" id="pupilR"></div></div>
-  <div class="mouth" id="mouth"></div>
-  <div class="accessory" id="accessory"></div>
-  <button class="pop-out" onclick="popOut()">↗</button>
-
-  <div class="color-picker">
-    <button style="background:#fff0f6" onclick="setBg('#fff0f6')"></button>
-    <button style="background:#d0f4de" onclick="setBg('#d0f4de')"></button>
-    <button style="background:#cce5ff" onclick="setBg('#cce5ff')"></button>
-    <button style="background:#f9f9c5" onclick="setBg('#f9f9c5')"></button>
-    <button style="background:#ffe3ec" onclick="setBg('#ffe3ec')"></button>
-    <button style="background:#f5f5dc" onclick="setBg('#f5f5dc')"></button>
+  <div class="controls">
+    <input type="range" min="100" max="200" value="100" class="resize-slider" id="resizeSlider">
+    <select id="accessorySelect" class="accessory-select">
+      <option value="none">No Accessory</option>
+      <option value="bow">Bow</option>
+      <option value="cat">Cat Ears</option>
+      <option value="hat">Santa Hat</option>
+      <option value="beard">Beard</option>
+    </select>
+    <div class="color-picker">
+      <button style="background:#fff0f6" onclick="setBg('#fff0f6')"></button>
+      <button style="background:#d0f4de" onclick="setBg('#d0f4de')"></button>
+      <button style="background:#cce5ff" onclick="setBg('#cce5ff')"></button>
+      <button style="background:#f9f9c5" onclick="setBg('#f9f9c5')"></button>
+      <button style="background:#ffe3ec" onclick="setBg('#ffe3ec')"></button>
+      <button style="background:#f5f5dc" onclick="setBg('#f5f5dc')"></button>
+    </div>
+    <select id="micSelect"></select>
   </div>
-  <select id="micSelect"></select>
-
+  <button class="pop-out" onclick="popOut()">↗</button>
+  <div class="face-part eyebrow left"></div>
+  <div class="face-part eyebrow right"></div>
+  <div class="face-part eye left"><div class="pupil" id="pupilL"></div></div>
+  <div class="face-part eye right"><div class="pupil" id="pupilR"></div></div>
+  <div class="face-part mouth" id="mouth"></div>
+  <div class="face-part accessory" id="accessory"></div>
   <script>
     const leftPupil = document.getElementById('pupilL');
     const rightPupil = document.getElementById('pupilR');
@@ -210,7 +186,7 @@
     }
 
     function setAccessory(value) {
-      accessory.className = 'accessory';
+      accessory.className = 'face-part accessory';
       if (value === 'none') return;
       accessory.classList.add(value);
       localStorage.setItem('accessory', value);
@@ -231,7 +207,7 @@
     }
 
     function randomMouth() {
-      mouth.className = 'mouth';
+      mouth.className = 'face-part mouth';
       const r = Math.random();
       if (r > 0.8) mouth.classList.add('grin');
       else if (r > 0.6) mouth.classList.add('think');
@@ -264,19 +240,16 @@
         const source = audioCtx.createMediaStreamSource(stream);
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 512;
-
         source.connect(analyser);
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
         function update() {
           analyser.getByteFrequencyData(dataArray);
           const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
           if (volume > 30) {
-            mouth.className = 'mouth open';
+            mouth.className = 'face-part mouth open';
           }
           requestAnimationFrame(update);
         }
-
         update();
       } catch (err) {
         alert('Mic access is needed to animate the mouth!');
@@ -284,23 +257,19 @@
       }
     }
 
-    micSelect.addEventListener('change', () => {
-      startMic(micSelect.value);
-    });
+    micSelect.addEventListener('change', () => startMic(micSelect.value));
 
     resizeSlider.addEventListener('input', () => {
       const scale = resizeSlider.value / 100;
-      document.body.style.transform = `scale(${scale})`;
+      document.querySelectorAll('.face-part').forEach(el => {
+        el.style.transform += ` scale(${scale})`;
+      });
     });
 
-    accessorySelect.addEventListener('change', () => {
-      setAccessory(accessorySelect.value);
-    });
+    accessorySelect.addEventListener('change', () => setAccessory(accessorySelect.value));
 
     getMicDevices().then(() => {
-      if (micSelect.options.length > 0) {
-        startMic(micSelect.value);
-      }
+      if (micSelect.options.length > 0) startMic(micSelect.value);
     });
 
     const savedColor = localStorage.getItem('bgColor');
