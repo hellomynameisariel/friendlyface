@@ -75,7 +75,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      transition: transform 0.3s ease;
+      transition: transform 0.6s ease;
     }
     .eyebrow {
       width: 10vmin;
@@ -101,9 +101,6 @@
       left: 50%;
       transform: translateX(-50%);
       transition: all 0.2s ease;
-    }
-    .mouth.open {
-      height: 25vmin;
     }
     .mouth.grin {
       border-radius: 50%;
@@ -152,17 +149,15 @@
       background: white;
       border-radius: 50%;
     }
-    .hat + .beard {
-      top: 75%;
-    }
     .beard {
       width: 28vmin;
       height: 15vmin;
       background: white;
       border-radius: 0 0 50% 50%;
-    }
-    #micSelect {
-      font-size: 1rem;
+      top: 75%;
+      left: 50%;
+      transform: translateX(-50%);
+      position: absolute;
     }
   </style>
 </head>
@@ -184,7 +179,6 @@
       <button style="background:#ffe3ec" onclick="setBg('#ffe3ec')"></button>
       <button style="background:#f5f5dc" onclick="setBg('#f5f5dc')"></button>
     </div>
-    <select id="micSelect"></select>
   </div>
   <button class="pop-out" onclick="popOut()">↗</button>
   <div class="face-container" id="face">
@@ -194,18 +188,19 @@
     <div class="face-part eye right"><div class="pupil" id="pupilR"></div></div>
     <div class="face-part mouth" id="mouth"></div>
     <div class="face-part accessory" id="accessory"></div>
+    <div class="face-part beard" id="beard" style="display:none"></div>
   </div>
   <script>
     const leftPupil = document.getElementById('pupilL');
     const rightPupil = document.getElementById('pupilR');
     const mouth = document.getElementById('mouth');
-    const micSelect = document.getElementById('micSelect');
     const resizeSlider = document.getElementById('resizeSlider');
     const accessory = document.getElementById('accessory');
     const accessorySelect = document.getElementById('accessorySelect');
     const face = document.getElementById('face');
     const browL = document.getElementById('eyebrowL');
     const browR = document.getElementById('eyebrowR');
+    const beard = document.getElementById('beard');
 
     function setBg(color) {
       document.body.style.background = color;
@@ -214,9 +209,10 @@
 
     function setAccessory(value) {
       accessory.className = 'face-part accessory';
+      beard.style.display = 'none';
       if (value === 'none') return;
       accessory.classList.add(value);
-      if (value === 'hat') accessory.classList.add('beard');
+      if (value === 'hat' || value === 'beard') beard.style.display = 'block';
       localStorage.setItem('accessory', value);
     }
 
@@ -227,7 +223,8 @@
 
     function lookAround() {
       const directions = [
-        { x: -50, y: 0 }, { x: 50, y: 0 }, { x: 0, y: -50 }, { x: 0, y: 50 }
+        { x: -50, y: 0 }, { x: 50, y: 0 }, { x: 0, y: -50 }, { x: 0, y: 50 },
+        { x: -25, y: -25 }, { x: 25, y: -25 }, { x: -25, y: 25 }, { x: 25, y: 25 }
       ];
       const pick = directions[Math.floor(Math.random() * directions.length)];
       leftPupil.style.transform = `translate(${pick.x}%, ${pick.y}%)`;
@@ -242,57 +239,17 @@
     }
 
     function animateBrows() {
-      const angle = (Math.random() > 0.5) ? '-20deg' : '20deg';
-      browL.style.transform = `rotate(${angle})`;
-      browR.style.transform = `rotate(${angle.startsWith('-') ? angle.replace('-', '') : '-' + angle})`;
+      const angleL = (Math.random() > 0.7) ? -20 : 20;
+      const angleR = (Math.random() > 0.7) ? 20 : -20;
+      browL.style.transform = `rotate(${angleL}deg)`;
+      browR.style.transform = `rotate(${angleR}deg)`;
     }
 
     setInterval(() => {
       lookAround();
       randomMouth();
       animateBrows();
-    }, 3000);
-
-    async function getMicDevices() {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const mics = devices.filter(d => d.kind === 'audioinput');
-      micSelect.innerHTML = '';
-      mics.forEach((mic, i) => {
-        const option = document.createElement('option');
-        option.value = mic.deviceId;
-        option.textContent = mic.label || `Microphone ${i + 1}`;
-        micSelect.appendChild(option);
-      });
-      const savedId = localStorage.getItem('preferredMic');
-      if (savedId) micSelect.value = savedId;
-    }
-
-    async function startMic(deviceId) {
-      try {
-        localStorage.setItem('preferredMic', deviceId);
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: deviceId ? { exact: deviceId } : undefined } });
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 512;
-        source.connect(analyser);
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        function update() {
-          analyser.getByteFrequencyData(dataArray);
-          const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-          if (volume > 30) {
-            mouth.className = 'face-part mouth open';
-          }
-          requestAnimationFrame(update);
-        }
-        update();
-      } catch (err) {
-        alert('Mic access is needed to animate the mouth!');
-        console.error(err);
-      }
-    }
-
-    micSelect.addEventListener('change', () => startMic(micSelect.value));
+    }, 4000);
 
     resizeSlider.addEventListener('input', () => {
       const scale = resizeSlider.value / 100;
@@ -300,10 +257,6 @@
     });
 
     accessorySelect.addEventListener('change', () => setAccessory(accessorySelect.value));
-
-    getMicDevices().then(() => {
-      if (micSelect.options.length > 0) startMic(micSelect.value);
-    });
 
     const savedColor = localStorage.getItem('bgColor');
     const savedAccessory = localStorage.getItem('accessory');
