@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kawaii Face</title>
+  <title>FriendlyFace</title>
   <style>
     html, body {
       margin: 0;
@@ -15,7 +15,6 @@
       align-items: center;
       font-family: sans-serif;
     }
-
     .pop-out {
       position: absolute;
       top: 10px;
@@ -27,7 +26,6 @@
       padding: 5px 10px;
       border-radius: 5px;
     }
-
     .color-picker {
       position: absolute;
       bottom: 10px;
@@ -35,7 +33,6 @@
       display: flex;
       gap: 5px;
     }
-
     .color-picker button {
       width: 30px;
       height: 30px;
@@ -43,13 +40,16 @@
       border: none;
       cursor: pointer;
     }
-
     .resize-slider {
       position: absolute;
       top: 10px;
       left: 10px;
     }
-
+    .accessory-select {
+      position: absolute;
+      top: 50px;
+      left: 10px;
+    }
     .face {
       background: #ffe3ec;
       border-radius: 50%;
@@ -60,13 +60,11 @@
       position: relative;
       transition: transform 0.2s ease;
     }
-
     .eyes {
       display: flex;
       gap: 20%;
       margin-bottom: 10%;
     }
-
     .eye {
       width: 12vmin;
       height: 12vmin;
@@ -76,7 +74,6 @@
       position: relative;
       overflow: hidden;
     }
-
     .pupil {
       width: 4vmin;
       height: 4vmin;
@@ -88,7 +85,20 @@
       transform: translate(-50%, -50%);
       transition: transform 0.4s ease;
     }
-
+    .eyebrow {
+      position: absolute;
+      width: 8vmin;
+      height: 1vmin;
+      background: #000;
+      border-radius: 1vmin;
+      top: -3vmin;
+    }
+    .eyebrow.left {
+      left: 1vmin;
+    }
+    .eyebrow.right {
+      right: 1vmin;
+    }
     .mouth {
       width: 20vmin;
       height: 7vmin;
@@ -96,23 +106,24 @@
       border-radius: 0 0 10vmin 10vmin;
       transition: all 0.2s ease;
     }
-
     .mouth.open {
       height: 18vmin;
     }
-
     .mouth.grin {
       border-radius: 10vmin;
       height: 5vmin;
     }
-
     .mouth.think {
       width: 12vmin;
       height: 4vmin;
       border-radius: 50%;
       background: #999;
     }
-
+    .accessory {
+      position: absolute;
+      top: -8vmin;
+      font-size: 8vmin;
+    }
     #micSelect {
       position: absolute;
       bottom: 10px;
@@ -122,12 +133,26 @@
   </style>
 </head>
 <body>
-  <input type="range" min="50" max="100" value="80" class="resize-slider" id="resizeSlider">
+  <input type="range" min="80" max="150" value="100" class="resize-slider" id="resizeSlider">
+  <select id="accessorySelect" class="accessory-select">
+    <option value="none">No Accessory</option>
+    <option value="🎀">Bow</option>
+    <option value="🐱">Cat Ears</option>
+    <option value="🎅">Santa Hat</option>
+    <option value="🧔🏻">Beard</option>
+  </select>
   <div class="face" id="face">
+    <div class="accessory" id="accessory"></div>
     <button class="pop-out" onclick="popOut()">↗</button>
     <div class="eyes">
-      <div class="eye" id="eyeL"><div class="pupil" id="pupilL"></div></div>
-      <div class="eye" id="eyeR"><div class="pupil" id="pupilR"></div></div>
+      <div class="eye" id="eyeL">
+        <div class="eyebrow left"></div>
+        <div class="pupil" id="pupilL"></div>
+      </div>
+      <div class="eye" id="eyeR">
+        <div class="eyebrow right"></div>
+        <div class="pupil" id="pupilR"></div>
+      </div>
     </div>
     <div class="mouth" id="mouth"></div>
   </div>
@@ -138,6 +163,7 @@
     <button style="background:#cce5ff" onclick="setBg('#cce5ff')"></button>
     <button style="background:#f9f9c5" onclick="setBg('#f9f9c5')"></button>
     <button style="background:#ffe3ec" onclick="setBg('#ffe3ec')"></button>
+    <button style="background:#f5f5dc" onclick="setBg('#f5f5dc')"></button>
   </div>
 
   <select id="micSelect"></select>
@@ -149,10 +175,18 @@
     const mouth = document.getElementById('mouth');
     const micSelect = document.getElementById('micSelect');
     const resizeSlider = document.getElementById('resizeSlider');
+    const accessory = document.getElementById('accessory');
+    const accessorySelect = document.getElementById('accessorySelect');
 
     function setBg(color) {
       document.body.style.background = color;
       face.style.background = color;
+      localStorage.setItem('bgColor', color);
+    }
+
+    function setAccessory(value) {
+      accessory.textContent = value === 'none' ? '' : value;
+      localStorage.setItem('accessory', value);
     }
 
     function popOut() {
@@ -169,10 +203,10 @@
 
     function lookAround() {
       const directions = [
-        { x: -50, y: 0 }, // left
-        { x: 50, y: 0 },  // right
-        { x: 0, y: -50 }, // up
-        { x: 0, y: 50 }   // down
+        { x: -50, y: 0 },
+        { x: 50, y: 0 },
+        { x: 0, y: -50 },
+        { x: 0, y: 50 }
       ];
       const pick = directions[Math.floor(Math.random() * directions.length)];
       leftPupil.style.transform = `translate(${pick.x}%, ${pick.y}%)`;
@@ -187,10 +221,10 @@
     }
 
     setInterval(() => {
-      if (Math.random() > 0.7) blink();
-      if (Math.random() > 0.5) lookAround();
+      if (Math.random() > 0.5) blink();
+      if (Math.random() > 0.4) lookAround();
       if (Math.random() > 0.6) randomMouth();
-    }, 5000);
+    }, 4000);
 
     async function getMicDevices() {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -244,11 +278,24 @@
       face.style.height = `${size}vmin`;
     });
 
+    accessorySelect.addEventListener('change', () => {
+      setAccessory(accessorySelect.value);
+    });
+
     getMicDevices().then(() => {
       if (micSelect.options.length > 0) {
         startMic(micSelect.value);
       }
     });
+
+    // Load saved settings
+    const savedColor = localStorage.getItem('bgColor');
+    const savedAccessory = localStorage.getItem('accessory');
+    if (savedColor) setBg(savedColor);
+    if (savedAccessory) {
+      accessorySelect.value = savedAccessory;
+      setAccessory(savedAccessory);
+    }
   </script>
 </body>
 </html>
