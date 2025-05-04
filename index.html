@@ -51,16 +51,16 @@
     .eye.left {
       position: absolute;
       top: 30%;
-      left: 20%;
+      left: 30%;
     }
     .eye.right {
       position: absolute;
       top: 30%;
-      right: 20%;
+      left: 50%;
     }
     .eye {
-      width: 20vmin;
-      height: 20vmin;
+      width: 18vmin;
+      height: 18vmin;
       background: white;
       border: 2px solid #000;
       border-radius: 50%;
@@ -79,13 +79,13 @@
     }
     .eyebrow.left {
       position: absolute;
-      top: 18%;
-      left: 20%;
+      top: 20%;
+      left: 30%;
     }
     .eyebrow.right {
       position: absolute;
-      top: 18%;
-      right: 20%;
+      top: 20%;
+      left: 50%;
     }
     .eyebrow {
       width: 10vmin;
@@ -129,11 +129,50 @@
       clip-path: polygon(0 0, 50% 100%, 100% 0);
     }
     .cat {
+      position: absolute;
       width: 0;
       height: 0;
-      border-left: 6vmin solid transparent;
-      border-right: 6vmin solid transparent;
-      border-bottom: 10vmin solid gray;
+    }
+    .cat::before, .cat::after {
+      content: '';
+      position: absolute;
+      top: -6vmin;
+      width: 0;
+      height: 0;
+      border-left: 3vmin solid transparent;
+      border-right: 3vmin solid transparent;
+      border-bottom: 6vmin solid gray;
+    }
+    .cat::before {
+      left: -8vmin;
+    }
+    .cat::after {
+      right: -8vmin;
+    }
+    .whiskers {
+      position: absolute;
+      top: 62%;
+      left: 50%;
+      width: 60vmin;
+      height: 2vmin;
+      transform: translateX(-50%);
+    }
+    .whiskers::before, .whiskers::after {
+      content: '';
+      position: absolute;
+      width: 30vmin;
+      height: 2px;
+      background: black;
+    }
+    .whiskers::before {
+      left: 0;
+      top: -2vmin;
+      box-shadow: 0 1vmin 0 black, 0 2vmin 0 black;
+    }
+    .whiskers::after {
+      right: 0;
+      top: -2vmin;
+      box-shadow: 0 1vmin 0 black, 0 2vmin 0 black;
     }
     .hat {
       width: 24vmin;
@@ -154,14 +193,34 @@
       border-radius: 50%;
     }
     .beard {
-      width: 28vmin;
-      height: 15vmin;
-      background: white;
-      border-radius: 0 0 50% 50%;
-      top: 75%;
-      left: 50%;
-      transform: translateX(-50%);
       position: absolute;
+      top: 60%;
+      left: 50%;
+      width: 40vmin;
+      height: 25vmin;
+      background: white;
+      border-radius: 50% / 40%;
+      transform: translateX(-50%);
+    }
+    .beard::before {
+      content: '';
+      position: absolute;
+      top: -4vmin;
+      left: 12vmin;
+      width: 16vmin;
+      height: 4vmin;
+      background: white;
+      border-radius: 2vmin;
+    }
+    .beard::after {
+      content: '';
+      position: absolute;
+      top: -2vmin;
+      left: -6vmin;
+      width: 8vmin;
+      height: 12vmin;
+      background: white;
+      border-radius: 4vmin;
     }
   </style>
 </head>
@@ -192,6 +251,7 @@
     <div class="eye right"><div class="pupil" id="pupilR"></div></div>
     <div class="mouth" id="mouth"></div>
     <div class="accessory" id="accessory"></div>
+    <div class="whiskers" id="whiskers"></div>
     <div class="beard" id="beard" style="display:none"></div>
   </div>
   <script>
@@ -205,6 +265,7 @@
     const browL = document.getElementById('eyebrowL');
     const browR = document.getElementById('eyebrowR');
     const beard = document.getElementById('beard');
+    const whiskers = document.getElementById('whiskers');
 
     function setBg(color) {
       document.body.style.background = color;
@@ -214,9 +275,11 @@
     function setAccessory(value) {
       accessory.className = 'accessory';
       beard.style.display = 'none';
+      whiskers.style.display = 'none';
       if (value === 'none') return;
       accessory.classList.add(value);
       if (value === 'hat' || value === 'beard') beard.style.display = 'block';
+      if (value === 'cat') whiskers.style.display = 'block';
       localStorage.setItem('accessory', value);
     }
 
