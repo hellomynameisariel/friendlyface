@@ -22,6 +22,26 @@
       gap: 10px;
       z-index: 1000;
     }
+    .color-picker button {
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      margin-right: 5px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .pop-out {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.6);
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      z-index: 1000;
+    }
     .face-container {
       position: absolute;
       top: 50%;
@@ -67,11 +87,11 @@
       transform-origin: center;
     }
     .eyebrow.left {
-      top: 20%;
+      top: 22%;
       left: 35%;
     }
     .eyebrow.right {
-      top: 20%;
+      top: 22%;
       left: 55%;
     }
     .mouth {
@@ -85,6 +105,18 @@
       transform: translateX(-50%);
       transition: all 0.2s ease;
       z-index: 10;
+    }
+    .nose {
+      position: absolute;
+      top: 52%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 6vmin;
+      height: 4vmin;
+      background: #f4cccc;
+      border-radius: 50% / 60%;
+      border: 1px solid #000;
+      z-index: 9;
     }
     .accessory {
       position: absolute;
@@ -126,23 +158,57 @@
 <body>
   <div class="controls">
     <input type="range" min="100" max="200" value="100" id="resizeSlider">
+    <select id="accessorySelect">
+      <option value="none">No Accessory</option>
+      <option value="hat">Santa Hat</option>
+      <option value="beard">Beard</option>
+    </select>
+    <div class="color-picker">
+      <button style="background:#fff0f6" onclick="setBg('#fff0f6')"></button>
+      <button style="background:#d0f4de" onclick="setBg('#d0f4de')"></button>
+      <button style="background:#cce5ff" onclick="setBg('#cce5ff')"></button>
+      <button style="background:#f9f9c5" onclick="setBg('#f9f9c5')"></button>
+      <button style="background:#ffe3ec" onclick="setBg('#ffe3ec')"></button>
+      <button style="background:#f5f5dc" onclick="setBg('#f5f5dc')"></button>
+    </div>
   </div>
+  <button class="pop-out" onclick="popOut()">↗</button>
   <div class="face-container" id="face">
     <div class="eye left"><div class="pupil" id="pupilL"></div></div>
     <div class="eye right"><div class="pupil" id="pupilR"></div></div>
     <div class="eyebrow left" id="eyebrowL"></div>
     <div class="eyebrow right" id="eyebrowR"></div>
     <div class="mouth" id="mouth"></div>
+    <div class="nose"></div>
     <div class="accessory hat" id="accessory"></div>
     <div class="beard" id="beard"></div>
   </div>
   <script>
     const resizeSlider = document.getElementById('resizeSlider');
     const face = document.getElementById('face');
+    const accessory = document.getElementById('accessory');
+    const accessorySelect = document.getElementById('accessorySelect');
+
     resizeSlider.addEventListener('input', () => {
       const scale = resizeSlider.value / 100;
       face.style.transform = `translate(-50%, -50%) scale(${scale})`;
     });
+
+    accessorySelect.addEventListener('change', () => {
+      const value = accessorySelect.value;
+      accessory.className = 'accessory';
+      if (value !== 'none') accessory.classList.add(value);
+    });
+
+    function setBg(color) {
+      document.body.style.background = color;
+      localStorage.setItem('bgColor', color);
+    }
+
+    function popOut() {
+      const newWin = window.open('', '', 'width=400,height=400');
+      newWin.document.write(document.documentElement.outerHTML);
+    }
 
     const leftPupil = document.getElementById('pupilL');
     const rightPupil = document.getElementById('pupilR');
@@ -172,6 +238,9 @@
       lookAround();
       animateBrows();
     }, 4000);
+
+    const savedColor = localStorage.getItem('bgColor');
+    if (savedColor) setBg(savedColor);
   </script>
 </body>
 </html>
