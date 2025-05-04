@@ -9,7 +9,7 @@
       margin: 0;
       height: 100%;
       width: 100%;
-      background: #d0f4de;
+      background: #fcd5ce;
       font-family: sans-serif;
       overflow: hidden;
       display: flex;
@@ -22,38 +22,16 @@
       align-items: center;
       gap: 4rem;
     }
-    .controls {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 1000;
-    }
-    .pop-out {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-      font-size: 18px;
-      background: rgba(255, 255, 255, 0.6);
-      border: none;
-      padding: 5px 10px;
-      border-radius: 5px;
-      z-index: 1000;
-    }
     .face-container {
       position: relative;
       width: 80vmin;
       height: 80vmin;
-      transform: scale(1);
-      transition: transform 0.2s ease;
     }
     .eye, .eyebrow, .pupil, .mouth, .nose, .accessory, .beard {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
+      display: none;
     }
     .eye {
       top: 28%;
@@ -78,7 +56,6 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      transition: transform 0.6s ease;
     }
     .eyebrow {
       width: 10vmin;
@@ -163,41 +140,34 @@
   </style>
 </head>
 <body>
-  <button class="pop-out" onclick="popOut()">↗</button>
   <div class="wrapper">
     <div class="face-container" id="face">
-      <div class="eye left"><div class="pupil" id="pupilL"></div></div>
-      <div class="eye right"><div class="pupil" id="pupilR"></div></div>
+      <div class="eye left" id="eyeL"><div class="pupil"></div></div>
+      <div class="eye right" id="eyeR"><div class="pupil"></div></div>
       <div class="eyebrow left" id="eyebrowL"></div>
       <div class="eyebrow right" id="eyebrowR"></div>
       <div class="mouth" id="mouth"></div>
       <div class="nose" id="nose"></div>
-      <div class="accessory hat" id="hat" style="display:none;"></div>
-      <div class="accessory beard" id="beard" style="display:none;"></div>
+      <div class="accessory hat" id="hat"></div>
+      <div class="beard" id="beard"></div>
     </div>
 
-    <div class="task-list" id="taskList">
-      <!-- Tasks injected via JS -->
-    </div>
+    <div class="task-list" id="taskList"></div>
   </div>
 
   <script>
     const faceParts = {
+      eyebrowL: document.getElementById('eyebrowL'),
+      eyebrowR: document.getElementById('eyebrowR'),
+      eyeL: document.getElementById('eyeL'),
+      eyeR: document.getElementById('eyeR'),
+      nose: document.getElementById('nose'),
+      mouth: document.getElementById('mouth'),
       hat: document.getElementById('hat'),
       beard: document.getElementById('beard'),
     };
+
     const availableParts = Object.keys(faceParts);
-
-    function setBg(color) {
-      document.body.style.background = color;
-      localStorage.setItem('bgColor', color);
-    }
-
-    function popOut() {
-      const newWin = window.open('', '', 'width=600,height=600');
-      newWin.document.write(document.documentElement.outerHTML);
-    }
-
     const usedParts = new Set();
 
     function addFeature() {
